@@ -7,4 +7,5 @@ download_url: https://github.com/owasp-dep-scan/blint/blob/1e1250a4bf6c25eccba89
 license_expression: mit
 copyright: Copyright (c) OWASP Foundation
 package_url: pkg:pypi/blint@2.3.2
+notice_file: blint_binary.py.LICENSE
 notes: only a subset of functions from binary.py is used, after minor modifications

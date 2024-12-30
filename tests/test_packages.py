@@ -18,10 +18,8 @@ from scancode_config import REGEN_TEST_FIXTURES
 
 from rust_inspector import packages
 
-
 test_env = FileDrivenTesting()
 test_env.test_data_dir = os.path.join(os.path.dirname(__file__), "data")
-
 
 
 def test_can_collect_rust_packages_from_data():

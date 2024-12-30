@@ -16,7 +16,8 @@
 SPLIT_CHARACTERS_RUST = ["::", "_<", "<", ">", "(", ")", ",", " as ", " for "]
 
 
-
+# Standard symbols present in rust binaries which are not usually from rust
+# source files, and sometimes they are standard library symbols
 STANDARD_SYMBOLS_RUST = [
     "std",
     "vector",

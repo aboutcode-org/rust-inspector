@@ -8,11 +8,11 @@
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
 
-import os
-import lief
 import json
+import os
 import zlib
 
+import lief
 from typecode import contenttype
 from typecode.contenttype import get_type
 
@@ -67,7 +67,7 @@ def get_rust_packages_data(location):
     to the rust binary with data on packages and dependencies.
     See https://github.com/rust-secure-code/cargo-auditable for more info.
 
-    Code for parsing rust bianries to get package data is from
+    Code for parsing rust binaries to get package data is from
     https://github.com/rust-secure-code/cargo-auditable/blob/master/PARSING.md
     """
     if not is_executable_binary(location):
@@ -87,9 +87,12 @@ def get_rust_packages_data(location):
     return packages_data
 
 
-
 def might_have_rust_symbols(string_with_symbols):
-
+    """
+    Given a demangled symbol string obtained from a rust binary, return True if
+    there are rust symbols present in the string which could be mapped to rust
+    source symbols potentially, return False otherwise.
+    """
     if not string_with_symbols:
         return False
 
@@ -120,16 +123,20 @@ def might_have_rust_symbols(string_with_symbols):
 
     return True
 
-def remove_standard_symbols(rust_symbols):
-    return [
-        symbol
-        for symbol in rust_symbols
-        if symbol not in STANDARD_SYMBOLS_RUST
-    ]
+
+def remove_standard_symbols(rust_symbols, standard_symbols=STANDARD_SYMBOLS_RUST):
+    """
+    Remove standard symbols usually found in rust binaries. Given a list of rust
+    symbol strings, return a list of symbol strings which are most likely non-standard.
+    """
+    return [symbol for symbol in rust_symbols if symbol not in standard_symbols]
 
 
 def split_strings_by_char(split_strings, split_char):
-
+    """
+    Given a list of strings, return another list of strings with all
+    the substrings from each string, split by the `split_char`.
+    """
     final_split_strings = []
     for split_str in split_strings:
         if split_char in split_str:
@@ -138,15 +145,16 @@ def split_strings_by_char(split_strings, split_char):
         else:
             final_split_strings.append(split_str)
 
-    return [
-        split_string
-        for split_string in final_split_strings
-        if split_string 
-    ]
+    return [split_string for split_string in final_split_strings if split_string]
 
 
 def split_strings_into_rust_symbols(strings_to_split, split_by_chars=SPLIT_CHARACTERS_RUST):
-
+    """
+    Given a list of strings containing a group of rust symbols, get a list
+    of strings with the extracted individual symbol strings, using a list of
+    `split_by_chars` which are common characters found between rust symbols in
+    demangled rust string containing multiple symbols.
+    """
     split_strings = []
     split_strings_log = []
     for split_char in split_by_chars:
@@ -159,10 +167,17 @@ def split_strings_into_rust_symbols(strings_to_split, split_by_chars=SPLIT_CHARA
     return split_strings
 
 
-def cleanup_symbols(split_symbols, include_stdlib=False, unique=True, sort_symbols=False):
+def cleanup_symbols(symbols, include_stdlib=False, unique=True, sort_symbols=False):
+    """
+    Given a list of `symbols` strings, return a list of cleaned up
+    symbol strings, removing strings which does not have symbols.
 
+    If `include_stdlib` is False, remove standard rust symbols.
+    If `unique` is True, only return unique symbol strings.
+    If `sort_symbols` is True, return a sorted list of symbols.
+    """
     rust_symbols = []
-    for split_string in split_symbols:
+    for split_string in symbols:
         if might_have_rust_symbols(split_string):
             rust_symbols.append(split_string)
 
@@ -178,17 +193,22 @@ def cleanup_symbols(split_symbols, include_stdlib=False, unique=True, sort_symbo
     return rust_symbols
 
 
-def extract_strings_with_symbols(symbols_data, include_stdlib=False, unique=True, sort_symbols=False):
-
+def extract_strings_with_symbols(
+    symbols_data, include_stdlib=False, unique=True, sort_symbols=False
+):
+    """
+    From a list of rust symbols data parsed and demangled from a binary,
+    return a list of individual symbols (after cleanup) found in the strings.
+    """
     strings_with_symbols = []
-    
+
     ignore_types = ["NOTYPE", "TLS"]
 
     for symbol_data in symbols_data:
 
         if not symbol_data.get("name"):
             continue
-        
+
         if symbol_data.get("type") in ignore_types:
             continue
 
@@ -202,14 +222,14 @@ def extract_strings_with_symbols(symbols_data, include_stdlib=False, unique=True
         # These are usually like the following:
         # `getrandom@GLIBC_2.25`, `__umodti3`, `_ITM_registerTMCloneTable`
         # So these doesn't have source symbols
-        if symbol_data.get("binding") == 'WEAK':
+        if symbol_data.get("binding") == "WEAK":
             continue
 
         # file/module names are also source symbols as they
         # are imported in source code files
         if symbol_data.get("type") == "FILE":
             file_string = symbol_data.get("name")
-            file_segments = file_string.split('.')
+            file_segments = file_string.split(".")
             if not file_segments:
                 continue
 
@@ -227,7 +247,7 @@ def extract_strings_with_symbols(symbols_data, include_stdlib=False, unique=True
 
     split_symbols = split_strings_into_rust_symbols(strings_to_split=strings_with_symbols)
     rust_symbols = cleanup_symbols(
-        split_symbols=split_symbols,
+        symbols=split_symbols,
         include_stdlib=include_stdlib,
         unique=unique,
         sort_symbols=sort_symbols,
@@ -240,7 +260,6 @@ def collect_and_parse_rust_symbols(location, include_stdlib=False, sort_symbols=
     """
     Return a mapping of Rust symbols of interest for the Rust binary file at ``location``.
     Return an empty mapping if there is no symbols or if this is not a binary.
-    Raise exceptions on errors.
     """
     if not is_executable_binary(location):
         return
@@ -254,11 +273,12 @@ def collect_and_parse_rust_symbols(location, include_stdlib=False, sort_symbols=
     )
 
 
-def collect_and_parse_rust_symbols_from_data(rust_data, include_stdlib=False, unique=True, sort_symbols=False, **kwargs):
+def collect_and_parse_rust_symbols_from_data(
+    rust_data, include_stdlib=False, unique=True, sort_symbols=False, **kwargs
+):
     """
     Return a mapping of Rust symbols of interest for the mapping of Rust binary of ``rust_data``.
     Return an empty mapping if there is no symbols or if this is not a binary.
-    Raise exceptions on errors.
     """
     if not rust_data:
         return {}

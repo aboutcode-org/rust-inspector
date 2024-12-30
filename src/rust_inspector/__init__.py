@@ -7,4 +7,3 @@
 # See https://github.com/nexB/rust-inspector for support or download.
 # See https://aboutcode.org for more information about nexB OSS projects.
 #
-

@@ -10,7 +10,6 @@
 
 import os
 
-
 from commoncode.testcase import FileDrivenTesting
 from scancode.cli_test_utils import check_json_scan
 from scancode.cli_test_utils import run_scan_click
@@ -27,4 +26,3 @@ def test_scancode_plugin_with_rust_symbol_option():
     run_scan_click(args)
     expected = test_env.get_test_loc("binary-with-deps/cargo_dependencies-scancode.expected.json")
     check_json_scan(expected, result_file, regen=REGEN_TEST_FIXTURES)
-

@@ -9,18 +9,16 @@
 #
 
 import json
-import lief
 import os
 
+import lief
 import pytest
 from commoncode.testcase import FileDrivenTesting
 from scancode.cli_test_utils import check_json
 from scancode_config import REGEN_TEST_FIXTURES
 
 from rust_inspector import binary
-
 from rust_inspector.blint_binary import parse_symbols
-
 
 test_env = FileDrivenTesting()
 test_env.test_data_dir = os.path.join(os.path.dirname(__file__), "data")
@@ -72,13 +70,22 @@ def test_get_rust_packages_data_large():
     check_json(expected, rust_packages_data, regen=REGEN_TEST_FIXTURES)
 
 
-
 @pytest.mark.parametrize(
     "split_strings,split_char,expected_split_strings",
     [
         (
-            ["core::ptr::drop_in_place<cyclonedx_bom::specs::common::bom::v1_5::Bom>"], "::",
-            ["core", "ptr", "drop_in_place<cyclonedx_bom", "specs", "common", "bom", "v1_5", "Bom>"]
+            ["core::ptr::drop_in_place<cyclonedx_bom::specs::common::bom::v1_5::Bom>"],
+            "::",
+            [
+                "core",
+                "ptr",
+                "drop_in_place<cyclonedx_bom",
+                "specs",
+                "common",
+                "bom",
+                "v1_5",
+                "Bom>",
+            ],
         ),
     ],
 )
@@ -92,7 +99,17 @@ def test_split_strings_by_char(split_strings, split_char, expected_split_strings
     [
         (
             ["core::ptr::drop_in_place<cyclonedx_bom::specs::common::bom::v1_5::Bom>"],
-            ["core", "ptr", "drop_in_place", "cyclonedx_bom", "specs", "common", "bom", "v1_5", "Bom"]
+            [
+                "core",
+                "ptr",
+                "drop_in_place",
+                "cyclonedx_bom",
+                "specs",
+                "common",
+                "bom",
+                "v1_5",
+                "Bom",
+            ],
         ),
     ],
 )
@@ -106,7 +123,7 @@ def test_split_strings_into_rust_symbols(strings_to_split, expected_split_string
     [
         (
             ["async_io::reactor::Reactor::process_timers::__CALLSITE::META"],
-            ["async_io", "reactor", "Reactor", "process_timers"]
+            ["async_io", "reactor", "Reactor", "process_timers"],
         ),
     ],
 )
@@ -119,10 +136,10 @@ def test_split_strings_into_cleaned_rust_symbols(strings_to_split, symbols):
 def test_might_have_rust_symbols():
     strings_with_symbols = ["async_io::reactor::Reactor::process_timers::__CALLSITE::META"]
     final_split_strings = binary.split_strings_into_rust_symbols(strings_with_symbols)
-    assert sum([
-        binary.might_have_rust_symbols(split_string)
-        for split_string in final_split_strings
-    ]) == 4
+    assert (
+        sum([binary.might_have_rust_symbols(split_string) for split_string in final_split_strings])
+        == 4
+    )
 
 
 def test_extract_strings_with_symbols():
@@ -130,15 +147,20 @@ def test_extract_strings_with_symbols():
     with open(symbols_data_file) as res:
         rust_symbols_data = json.load(res)
 
-    extracted_symbols = binary.extract_strings_with_symbols(symbols_data=rust_symbols_data, sort_symbols=True)
+    extracted_symbols = binary.extract_strings_with_symbols(
+        symbols_data=rust_symbols_data, sort_symbols=True
+    )
     expected = test_env.get_test_loc("binary-with-deps/cargo_dependencies-symbols-cleaned.json")
     check_json(expected, extracted_symbols, regen=REGEN_TEST_FIXTURES)
+
 
 def test_extract_strings_with_symbols_large():
     symbols_data_file = test_env.get_test_loc("trustier/trustier-symbols.json")
     with open(symbols_data_file) as res:
         rust_symbols_data = json.load(res)
 
-    extracted_symbols = binary.extract_strings_with_symbols(symbols_data=rust_symbols_data, sort_symbols=True)
+    extracted_symbols = binary.extract_strings_with_symbols(
+        symbols_data=rust_symbols_data, sort_symbols=True
+    )
     expected = test_env.get_test_loc("trustier/trustier-symbols-cleaned.json")
     check_json(expected, extracted_symbols, regen=REGEN_TEST_FIXTURES)

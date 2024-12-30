@@ -1,13 +1,29 @@
-import lief
-from symbolic._lowlevel import ffi, lib
-from symbolic.utils import encode_str, decode_str, rustcall
+#
+# Copyright (c) OWASP Foundation
+# SPDX-License-Identifier: MIT
+#
+# Originally taken from
+# https://github.com/owasp-dep-scan/blint/blob/1e1250a4bf6c25eccba8970bd877901ee56070c7/blint/lib/binary.py
+# Used after minor modifications.
+#
 
+import lief
+from symbolic._lowlevel import ffi
+from symbolic._lowlevel import lib
+from symbolic.utils import decode_str
+from symbolic.utils import encode_str
+from symbolic.utils import rustcall
 
 # TODO: Consider using blint as a dependency instead of vendoring
 
 
 def demangle_symbolic_name(symbol, lang=None, no_args=False):
-    """Demangles symbol using llvm demangle falling back to some heuristics. Covers legacy rust."""
+    """
+    Return a demangled symbol string, given a symbol string.
+
+    Demangles symbols obtained from a rust binary using llvm demangle (using symbolic),
+    falling back to some heuristics. Also covers legacy rust.
+    """
     try:
         func = lib.symbolic_demangle_no_args if no_args else lib.symbolic_demangle
         lang_str = encode_str(lang) if lang else ffi.NULL
@@ -27,7 +43,10 @@ def demangle_symbolic_name(symbol, lang=None, no_args=False):
                 or symbol.startswith(".rdata$")
                 or symbol.startswith(".refptr.")
             ):
-                symbol = f"__declspec(dllimport) {symbol.removeprefix('__imp_').removeprefix('.rdata$').removeprefix('.refptr.')}"
+                symbol_without_prefix = (
+                    symbol.removeprefix("__imp_").removeprefix(".rdata$").removeprefix(".refptr.")
+                )
+                symbol = f"__declspec(dllimport) {symbol_without_prefix}"
             demangled_symbol = (
                 symbol.replace("..", "::")
                 .replace("$SP$", "@")
@@ -58,13 +77,8 @@ def demangle_symbolic_name(symbol, lang=None, no_args=False):
 
 def parse_symbols(symbols):
     """
-    Parse symbols from a list of symbols.
-
-    Args:
-        symbols (it_symbols): A list of symbols to parse.
-
-    Returns:
-        tuple[list[dict], str]: A tuple containing the symbols_list and exe_type
+    Parse symbols from a list of symbol strings and get a list of symbol
+    data, with the demangled symbol string and other attributes for the symbol.
     """
     symbols_list = []
 

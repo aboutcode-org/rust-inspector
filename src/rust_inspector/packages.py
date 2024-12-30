@@ -15,14 +15,15 @@ from rust_inspector.binary import is_executable_binary
 
 """
 Extract packages information from Rust binaries using Lief.
-This gets packages from 
+This gets packages from binaries which are built using `cargo-auditable`.
+See https://github.com/rust-secure-code/cargo-auditable for more info
+on `cargo-auditable`.
 """
 
 
 def collect_rust_packages(location, package_only=False, **kwargs):
     """
     Yield cargo PackageData found in the Rust binary file at ``location``.
-    Raise exceptions on errors.
     """
     binary_data = get_rust_packages_data(location=location)
     yield from collect_rust_packages_from_data(
@@ -34,8 +35,8 @@ def collect_rust_packages(location, package_only=False, **kwargs):
 
 def collect_rust_packages_from_data(binary_data, package_only=False, **kwargs):
     """
-    Yield cargo PackageData found in the Rust binary file ``binary_data`` mapping extracted from
-    ``location``. Raise exceptions on errors.
+    Yield all the cargo PackageData with their dependencies found in the Rust binary file
+    from ``binary_data`` present in a rust binary.
 
     The data has this shape::
         {
@@ -81,7 +82,13 @@ def collect_rust_packages_from_data(binary_data, package_only=False, **kwargs):
 
 
 def get_rust_package_from_data(package_data, packages_by_index, package_only=False):
+    """
+    Yield a PackageData with it's dependencies from a data mapping `package_data`
+    containing package and dependencies information for a single cargo package.
 
+    `packages_by_index` is a mapping of DependentPackage objects by their index in
+    the list of packages present in the rust binary.
+    """
     from packagedcode.models import PackageData
 
     name = package_data.get("name")
@@ -96,9 +103,11 @@ def get_rust_package_from_data(package_data, packages_by_index, package_only=Fal
         is_private = True
 
     elif package_data.get("source") == "crates.io":
-        repository_homepage_url = name and f'https://crates.io/crates/{name}'
-        repository_download_url = name and version and f'https://crates.io/api/v1/crates/{name}/{version}/download'
-        api_data_url = name and f'https://crates.io/api/v1/crates/{name}'
+        repository_homepage_url = name and f"https://crates.io/crates/{name}"
+        repository_download_url = (
+            name and version and f"https://crates.io/api/v1/crates/{name}/{version}/download"
+        )
+        api_data_url = name and f"https://crates.io/api/v1/crates/{name}"
 
     dependencies = []
     for dependency_index in package_data.get("dependencies", []):
@@ -120,7 +129,9 @@ def get_rust_package_from_data(package_data, packages_by_index, package_only=Fal
 
 
 def get_dependent_package(package_data):
-
+    """
+    Get a DependentPackage object from a cargo `package_data` mapping.
+    """
     from packagedcode.models import DependentPackage
 
     name = package_data.get("name")
@@ -140,6 +151,10 @@ def get_dependent_package(package_data):
 
 
 def get_rust_binary_handler():
+    """
+    Return `RustBinaryHandler` class to parse and get packages information from
+    rust binary files.
+    """
     from packagedcode import models
 
     class RustBinaryHandler(models.DatafileHandler):
@@ -154,7 +169,9 @@ def get_rust_binary_handler():
         default_package_type = "cargo"
         default_primary_language = "Rust"
         description = "Rust binary"
-        documentation_url = "https://github.com/rust-secure-code/cargo-auditable/blob/master/PARSING.md"
+        documentation_url = (
+            "https://github.com/rust-secure-code/cargo-auditable/blob/master/PARSING.md"
+        )
 
         @classmethod
         def is_datafile(cls, location):
