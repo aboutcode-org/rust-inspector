@@ -33,11 +33,19 @@ valid: isort black
 
 check:
 	@echo "-> Run pycodestyle (PEP8) validation"
-	@${ACTIVATE} pycodestyle --max-line-length=100 --exclude=.eggs,venv,lib,thirdparty,docs,migrations,settings.py,.cache .
+	@${ACTIVATE} pycodestyle --max-line-length=100 --exclude=.eggs,venv,lib,thirdparty,docs,scripts,tests,migrations,settings.py,.cache .
 	@echo "-> Run isort imports ordering validation"
-	@${ACTIVATE} isort --sl --check-only -l 100 setup.py src tests .
+	@${ACTIVATE} isort --sl -l 100 src tests setup.py --check-only
 	@echo "-> Run black validation"
-	@${ACTIVATE} black --check --check -l 100 src tests setup.py
+	@${ACTIVATE} black --check -l 100 src tests setup.py
+
+check-ci:
+	@echo "-> Run pycodestyle (PEP8) validation"
+	pycodestyle --max-line-length=100 --exclude=.eggs,venv,lib,thirdparty,docs,scripts,tests,migrations,settings.py,.cache .
+	@echo "-> Run isort imports ordering validation"
+	isort --sl -l 100 src tests setup.py --check-only
+	@echo "-> Run black validation"
+	black --check -l 100 src tests setup.py
 
 clean:
 	@echo "-> Clean the Python env"
