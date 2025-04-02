@@ -205,7 +205,6 @@ def extract_strings_with_symbols(
     ignore_types = ["NOTYPE", "TLS"]
 
     for symbol_data in symbols_data:
-
         if not symbol_data.get("name"):
             continue
 

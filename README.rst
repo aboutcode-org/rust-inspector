@@ -7,8 +7,13 @@ pipelines.
 
 To install and use:
 
-- Run ``pip install rust-inspector``
-- Use with ``scancode --json-pp - --rust-symbol --verbose <PATH to a tree or file with Rust binaries>``
+- Run::
+
+    pip install rust-inspector``
+
+- Use with::
+
+    scancode --json-pp - --rust-symbol --verbose <PATH to a tree or file with Rust binaries>
 
 The JSON output will contain binary symbols found in Rust binaries if any.
 
