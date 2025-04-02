@@ -1,35 +1,32 @@
-name: CI Documentation and Code style
+name: CI Documentation
 
 on: [push, pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.9]
+        python-version: [3.12]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Dependencies
-        run:  pip install -e .[docs,testing]
+        run:  ./configure --dev
 
-      - name: Check Sphinx Documentation build minimally
-        working-directory: ./docs
-        run: sphinx-build -E -W source build
+      - name: Check documentation and HTML for errors and dead links
+        run: make docs-check
 
-      - name: Check for documentation style errors
-        working-directory: ./docs
-        run: ./scripts/doc8_style_check.sh
+      - name: Check documentation for style errors
+        run: make doc8
 
-      - name: Check for Code style errors
-        run: make check-ci
+
