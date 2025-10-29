@@ -1,6 +1,12 @@
 Changelog
 =========
 
+v0.2.1 (29th October, 2025)
+-----------------------------
+
+Bugfix release as v0.2.0 was missing the module.
+
+
 v0.2.0 (29th October, 2025)
 -----------------------------
 
