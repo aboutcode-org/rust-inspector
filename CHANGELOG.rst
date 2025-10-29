@@ -1,6 +1,10 @@
 Changelog
 =========
 
+v0.2.0 (29th October, 2025)
+-----------------------------
+
+Minor release with updated dependencies and python support.
 
 v0.1.0 (30th December, 2024)
 -----------------------------
