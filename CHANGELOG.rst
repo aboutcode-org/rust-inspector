@@ -1,6 +1,11 @@
 Changelog
 =========
 
+v0.2.2 (14 July, 2026)
+-----------------------------
+
+Relax version constraints and update version requirements.
+
 v0.2.1 (29th October, 2025)
 -----------------------------
 
